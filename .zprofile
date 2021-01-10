@@ -25,7 +25,7 @@ export GOOGLE_APPLICATION_CREDENTIALS="/home/gautierk/.keys/artifai-graphql.json
 
 # Default programs:
 export EDITOR="nvim"
-export TERMINAL="st"
+export TERMINAL="urxvt"
 export BROWSER="firefox"
 export READER="zathura"
 
