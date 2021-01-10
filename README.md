@@ -1,6 +1,6 @@
 # Cole Killian dotFiles
 
-These are the dotfiles I use.The contents include:
+These are the dotfiles I use. The contents include:
 
 - Helpful scripts in `~/.local/bin/` and `~/.local/bin/scripts/`
 - Configs for
@@ -19,3 +19,6 @@ These are the dotfiles I use.The contents include:
 
 
 
+# Usage
+
+https://www.atlassian.com/git/tutorials/dotfiles
