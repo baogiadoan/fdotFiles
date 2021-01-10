@@ -1,0 +1,3 @@
+Make Screenshot,$HOME/.config/rofi/sshot.sh
+Get Password,$HOME/.config/rofi/pass.sh
+Swap Displays,$HOME/.local/bin/scripts/i3-display-swap.sh
