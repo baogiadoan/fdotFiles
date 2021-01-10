@@ -103,7 +103,6 @@ URxvt.keysym.M-l:		perl:url-select:select_next
 URxvt.urlLauncher:		firefox
 URxvt.underlineURLs:	true
 URxvt.urlButton:		1     
-
 URxvt.keyboard-select.clipboard: true
 
 
