@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# st -e "cd $1 && nvim" &
+
+SPEED=0.1
+
+if [[ ! -z $1 ]]; then
+  cd $1
+fi
+
+sleep "$SPEED"
+
+i3-msg split v &> /dev/null
+
+st &> /dev/null & 
+
+sleep "$SPEED"
+
+i3-msg split h &> /dev/null
+
+st &> /dev/null & 
+
+sleep "$SPEED"
+
+i3-msg focus up &> /dev/null
+
+i3-msg resize set height 80ppt &> /dev/null
+
+nvim
