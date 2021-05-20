@@ -1,3 +1,12 @@
+!
+st.alpha: 1
+*.borderpx: 10
+! st.font:                 Inconsolata Nerd Font Mono:pixelsize=18:minspace=false
+st.font:                 Source Code Pro:pixelsize=16:minspace=false
+! st.font:                 Source Code Pro:pixelsize=16:minspace=false
+st.fontalt0:             DejaVuSansMono Nerd Font Mono:pixelsize=14 
+
+!
 ! ------------------------------------------------------------------------------
 ! Colour Configuration
 ! ------------------------------------------------------------------------------
@@ -67,7 +76,8 @@ Xft.rgba: rgb
 ! ------------------------------------------------------------------------------
 
 ! font spacing
-URxvt*letterSpace:		0
+! URxvt*letterSpace:		0
+URxvt.letterSpace:  0
 URxvt.lineSpace:		0
 
 ! general settings

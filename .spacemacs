@@ -33,6 +33,12 @@ This function should only modify configuration layer settings."
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
    '(
+     (yaml :variables yaml-enable-lsp t)
+     sql
+     ;; pandoc
+     imenu-list
+     (docker :variables docker-dockerfile-backend 'lsp)
+     (terraform :variables terraform-auto-format-on-save t terraform-backend 'lsp)
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
@@ -43,10 +49,13 @@ This function should only modify configuration layer settings."
      emacs-lisp
      git
      helm
-     lsp
+     (lsp :variables
+          lsp-headerline-breadcrumb-enable nil
+     )
      markdown
      multiple-cursors
      (org :variables
+          org-image-actual-width 400
           org-enable-github-support t
           org-enable-org-journal-support t
           org-enable-hugo-support t
@@ -60,7 +69,9 @@ This function should only modify configuration layer settings."
      (spell-checking :variables spell-checking-enable-by-default nil)
      syntax-checking
      version-control
-     treemacs
+     ;; treemacs
+     (treemacs :variables treemacs-use-scope-type 'Perspectives)
+     ;; (treemacs :variables treemacs-use-all-the-icons-theme t)
      ;; Layers I added in
      (latex :variables
             latex-build-command "LaTeX"
@@ -68,20 +79,35 @@ This function should only modify configuration layer settings."
             latex-enable-auto-fill nil)
      csv
      pdf
-     typescript
+     (typescript :variables
+                 node-add-modules-path t
+                 typescript-backend 'tide
+                 typescript-fmt-tool 'prettier
+                 typescript-fmt-on-save t
+                 typescript-linter 'eslint)
+
      vimscript
      tide
+     ;; rjsx-mode
+     ;; yasnippet-snippets
+     ;; prettier-js
      (javascript :variables
                  javascript-backend 'tide
                  javascript-fmt-tool 'prettier
+                 node-add-modules-path t
                  js2-basic-offset 2
                  js-indent-level 2)
      react
      html
-     (python :variables python-backend 'lsp python-lsp-server 'pyright)
-
+     (python :variables
+             python-backend 'lsp
+             python-lsp-server 'pyright
+             ;; python-tab-width 4
+             python-formatter 'black
+             python-format-on-save t
+             python-sort-imports-on-save t
+             python-pipenv-activate t)
      )
-
 
    ;; List of additional packages that will be installed without being wrapped
    ;; in a layer (generally the packages are installed only and should still be
@@ -92,11 +118,17 @@ This function should only modify configuration layer settings."
    ;; `:location' property: '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
    dotspacemacs-additional-packages '(
+                                      prettier-js
                                       yasnippet-classic-snippets
                                       format-all
                                       org-super-agenda
                                       org-noter
                                       react-snippets
+                                      s
+                                      org-clock-csv
+                                      nvm
+                                      rjsx-mode
+                                      yasnippet-snippets
                                       )
 
    ;; A list of packages that cannot be updated.
@@ -264,10 +296,19 @@ It should only modify the values of Spacemacs settings."
    ;; Default font or prioritized list of fonts. The `:size' can be specified as
    ;; a non-negative integer (pixel size), or a floating-point (point size).
    ;; Point size is recommended, because it's device independent. (default 10.0)
-   dotspacemacs-default-font '("Source Code Pro"
-                               :size 10.0
-                               :weight normal
-                               :width normal)
+   dotspacemacs-default-font '(("Source Code Pro")
+                               ;; ("Noto Color Emoji"
+                               ;; :size 16
+                               ;; :weight normal
+                               ;; :width normal
+                               ;; )
+                               )
+
+   ;; dotspacemacs-default-font '("DejaVuSansMono"
+   ;;                             :size 10.0
+   ;;                             :weight normal
+   ;;                             :width normal)
+   ;; DejaVu Sans Mono
 
    ;; The leader key (default "SPC")
    dotspacemacs-leader-key "SPC"
@@ -476,7 +517,8 @@ It should only modify the values of Spacemacs settings."
    ;; %z - mnemonics of buffer, terminal, and keyboard coding systems
    ;; %Z - like %z, but including the end-of-line format
    ;; (default "%I@%S")
-   dotspacemacs-frame-title-format "%I@%S"
+   dotspacemacs-frame-title-format "%f"
+   ;; dotspacemacs-frame-title-format "%I@%S"
 
    ;; Format specification for setting the icon title format
    ;; (default nil - same as frame-title-format)
@@ -549,9 +591,100 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
+  (nvm-use "v14.15.4")
+
+  ;; (setq exec-path (append exec-path '("~/.nvm/versions/node/v14.15.4/bin")))
+
+  ;; yasnippet
+  (yas-global-mode 1)
+
+  ;; flycheck
+  (global-flycheck-mode)
+  (add-hook 'after-init-hook #'global-flycheck-mode)
+
+  ;; company-mode 
+  (global-company-mode)
+
+  (with-eval-after-load 'lsp-mode
+
+    (push "[/\\\\][^/\\\\]*\\.next$" lsp-file-watch-ignored-directories)
+    (push "[/\\\\][^/\\\\]*\\build$" lsp-file-watch-ignored-directories)
+    )
+
+
+ (defun tide-setup-hook ()
+    (tide-setup)
+    (eldoc-mode)
+    (tide-hl-identifier-mode +1)
+    (setq web-mode-enable-auto-quoting nil)
+    (setq web-mode-markup-indent-offset 2)
+    (setq web-mode-code-indent-offset 2)
+    (setq web-mode-attr-indent-offset 2)
+    (setq web-mode-attr-value-indent-offset 2)
+    (setq lsp-eslint-server-command '("node" (concat (getenv "HOME") "/var/src/vscode-eslint/server/out/eslintServer.js") "--stdio"))
+    (set (make-local-variable 'company-backends)
+         '((company-tide company-files :with company-yasnippet)
+           (company-dabbrev-code company-dabbrev))))
+
+    ;; hooks
+    ;; (add-hook 'before-save-hook 'prettier nil)
+
+
+    ;; use rjsx-mode for .js* files except json and use tide with rjsx
+    (add-to-list 'auto-mode-alist '("\\.js.*$" . rjsx-mode))
+    (add-to-list 'auto-mode-alist '("\\.json$" . json-mode))
+    (add-hook 'rjsx-mode-hook 'tide-setup-hook)
+
+
+    ;; web-mode extra config
+    (add-hook 'web-mode-hook 'tide-setup-hook
+              (lambda () (pcase (file-name-extension buffer-file-name)
+                      ("tsx" ('tide-setup-hook))
+                      (_ (my-web-mode-hook)))))
+
+    (with-eval-after-load "flycheck"
+      (flycheck-add-mode 'typescript-tslint 'web-mode)
+      (add-hook 'web-mode-hook 'company-mode)
+      (add-hook 'web-mode-hook 'prettier-js-mode)
+      (add-hook 'web-mode-hook #'turn-on-smartparens-mode t)
+      )
+
+
+
+  ;; (with-eval-after-load "flycheck"
+  ;;   (flycheck-add-mode 'typescript-tslint 'web-mode)
+  ;;   (add-hook 'web-mode-hook 'company-mode)
+  ;;   (add-hook 'web-mode-hook 'prettier-js-mode)
+  ;;   (add-hook 'web-mode-hook #'turn-on-smartparens-mode t)
+
+  ;;   )
+
+
+
+  ;; Get emojis working
+  (set-fontset-font t 'unicode "Noto Color Emoji" nil 'prepend)
+
+
+  ;; ⭐
+
+  ;; 100 transparency
+  (set-frame-parameter (selected-frame) 'alpha '(100))
+
+  (add-to-list 'default-frame-alist '(alpha . (100)))
+
   ;; prevent selecting with visual mode
   (fset 'evil-visual-update-x-selection 'ignore)
 
+  ;; typescript and javascript indent level
+  (setq typescript-indent-level 2)
+  (setq javascript-indent-level 2)
+  ;; (setq js-indent-level 2
+  ;;       js-indent-align-list-continuation nil)
+
+
+  ;; (setq web-mode-code-indent-offset 2)
+  ;; (setq web-mode-indent-style 2)
+  ;; (setq-default js2-basic-offset 2)
 
   ;; https://develop.spacemacs.org/layers/+completion/auto-completion/README.html for nicer looking faces auto-completion
   (custom-set-faces
@@ -719,7 +852,16 @@ before packages are loaded."
      alert-user-configuration (quote ((((:category . "org-pomodoro")) libnotify nil)))
      org-pomodoro-length 50
      org-pomodoro-short-break-length 10
-     ))
+     )
+
+    (setq org-pomodoro-audio-player "mplayer")
+    (setq org-pomodoro-finished-sound-args "-volume 0.3")
+    (setq org-pomodoro-long-break-sound-args "-volume 0.3")
+    (setq org-pomodoro-short-break-sound-args "-volume 0.3")
+    ;; (setq org-pomodoro-ticking-sound-args "-volume 0.3")
+    )
+
+
 
   (defun ruborcalor/org-pomodoro-time ()
     "Return the remaining pomodoro time"
@@ -971,14 +1113,26 @@ before packages are loaded."
   (spacemacs/toggle-auto-fill-mode-off)
 
   ;; Javascript customization
-  (setq js-indent-level 2)
-  (setq prettier-js-args '(
-                           "--tab-width" "2"
-                           ))
-  (setq prettier-html-args '(
-                             "--tab-width" "2"
-                             ))
+  ;; (setq js-indent-level 2)
+  ;; (setq prettier-js-args '(
+  ;;                          "--tab-width" "2"
+  ;;                          ))
+  ;; (setq prettier-html-args '(
+  ;;                            "--tab-width" "2"
+  ;;                            ))
 
+  ;; Delete backwards word? It already seems to work
+  (with-eval-after-load 'company
+    (define-key company-active-map (kbd "C-w") 'evil-delete-backward-word)
+    )
+  (with-eval-after-load 'helm
+    (define-key helm-map (kbd "C-w") 'evil-delete-backward-word)
+    )
+
+
+  ;; Don't lock files when emacs is using them
+  ;; Necessary for npm to not crash when editing files in project
+  (setq create-lockfiles nil)
 
   ;; Commented
 
@@ -1034,13 +1188,6 @@ before packages are loaded."
   ;; (setq org-my-anki-file "~/.org/anki.org")
 
 
-  ;; Delete backwards word? It already seems to work
-  ;; (with-eval-after-load 'company
-  ;;   (define-key company-active-map (kbd "C-w") 'evil-delete-backward-word)
-  ;;   )
-  ;; (with-eval-after-load 'helm
-  ;;   (define-key helm-map (kbd "C-w") 'evil-delete-backward-word)
-  ;;   )
 
 
   ;; Not sure if I need this setting for projectile
@@ -1078,8 +1225,6 @@ before packages are loaded."
   ;;   :demand t ; make sure it is loaded
   ;; )
 
-  ;; Don't lock files when emacs is using them
-  ;; (setq create-lockfiles nil)
 
   ;; Enables some org keybindings in evil org
   ;; (use-package evil-org
@@ -1133,3 +1278,25 @@ before packages are loaded."
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(evil-want-Y-yank-to-eol nil)
+ '(package-selected-packages
+   '(pandoc-mode ox-pandoc dockerfile-mode docker docker-tramp company-terraform terraform-mode hcl-mode yaml-mode sqlup-mode sql-indent org-clock-csv yasnippet-snippets yasnippet-classic-snippets yapfify xterm-color ws-butler writeroom-mode winum which-key web-mode web-beautify vterm volatile-highlights vimrc-mode vi-tilde-fringe uuidgen use-package unicode-fonts unfill undo-tree treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil toc-org tide terminal-here tagedit symon symbol-overlay string-inflection sphinx-doc spaceline-all-the-icons smeargle slim-mode shell-pop scss-mode sass-mode rjsx-mode restart-emacs react-snippets rainbow-delimiters pytest pyenv-mode py-isort pug-mode prettier-js popwin poetry pippel pipenv pip-requirements pdf-tools pcre2el password-generator paradox ox-hugo ox-gfm overseer orgit org-superstar org-super-agenda org-roam org-rich-yank org-re-reveal org-projectile org-present org-pomodoro org-noter org-mime org-journal org-download org-cliplink org-brain open-junk-file nodejs-repl nameless mwim multi-term move-text mmm-mode markdown-toc magit-svn magit-section magit-gitflow macrostep lsp-ui lsp-python-ms lsp-pyright lsp-origami lsp-latex lorem-ipsum livid-mode live-py-mode link-hint json-navigator json-mode js2-refactor js-doc indent-guide importmagic impatient-mode hybrid-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-pydoc helm-purpose helm-projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-lsp helm-ls-git helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ gh-md fuzzy format-all forge font-lock+ flyspell-correct-helm flycheck-pos-tip flycheck-package flycheck-elsa flx-ido fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-easymotion evil-cleverparens evil-args evil-anzu eval-sexp-fu eshell-z eshell-prompt-extras esh-help emr emmet-mode elisp-slime-nav editorconfig dumb-jump dotenv-mode dired-quick-sort diminish devdocs define-word dap-mode dactyl-mode cython-mode csv-mode company-web company-statistics company-reftex company-auctex company-anaconda column-enforce-mode clean-aindent-mode centered-cursor-mode browse-at-remote blacken auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile aggressive-indent ace-link ace-jump-helm-line ac-ispell))
+ '(web-mode-markup-indent-offset 2))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(company-tooltip-common ((t (:inherit company-tooltip :weight bold :underline nil))))
+ '(company-tooltip-common-selection ((t (:inherit company-tooltip-selection :weight bold :underline nil)))))
+)

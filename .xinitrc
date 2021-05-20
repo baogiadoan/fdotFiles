@@ -13,13 +13,13 @@
 . ~/.xprofile
 
 
-# merge xrdb
-[[ -f ~/.Xresources ]] && xrdb -merge ~/.Xresources
 
 # Your default LARBS WM is determined in your `~/.profile` on login.  Here we
 # run the proper command to run when the graphical environment starts.
 
 # Comment/uncomment these lines depending on what wm you want to use. Also
 # check the i3blocks line above.
+# xrandr --setprovideroutputsource modesetting NVIDIA-0
+# xrandr --auto
 ssh-agent i3
 # ssh-agent dwm

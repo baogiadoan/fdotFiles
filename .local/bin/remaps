@@ -17,4 +17,4 @@ xmodmap -e 'keycode 107 = Super_R'
 xset -q | grep "Caps Lock:\s*on" && xdotool key Caps_Lock
 
 # Speed up mouse
-xinput set-prop 13 314 0.8
+# xinput set-prop 13 314 0.8

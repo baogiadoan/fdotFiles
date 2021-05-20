@@ -10,18 +10,27 @@ PATH="$PATH:$(du "$HOME/.local/bin/" | cut -f2 | paste -sd ':')"
 
 PATH="$PATH:$HOME/.local/bin/scripts"
 PATH="$PATH:/root/.local/bin"
-PATH=~/.npm-global/bin:$PATH
-PATH=$PATH:/home/gautierk/.gem/ruby/2.7.0/bin
+PATH=~/.npm/bin:$PATH
+PATH=$PATH:/home/cole/.gem/ruby/2.7.0/bin
+PATH=~/.nvm/versions/node/v14.15.4/bin:$PATH
+
 export PATH
+
+## add this to your .bashrc, pipenv will now place the virtualenv inside the project folder. Emacs will see it and activate it.
+export PIPENV_VENV_IN_PROJECT=1 
 
 # better yaourt colors
 export YAOURT_COLORS="nb=1:pkg=1:ver=1;32:lver=1;45:installed=1;42:grp=1;34:od=1;41;5:votes=1;44:dsc=0:other=1;35"
 
+export N_PREFIX="$HOME/.n"
+
+# me
 # change TEXMFHOME to a dot directory
 export TEXMFHOME=$HOME/.texmf
-export TEXINPUTS=/home/gautierk/.texmf//:
+export IDEA_JDK=/usr/lib/jvm/jdk-jetbrains
+# export TEXINPUTS=/home/cole/.texmf//:
 
-export GOOGLE_APPLICATION_CREDENTIALS="/home/gautierk/.keys/artifai-graphql.json"
+# export GOOGLE_APPLICATION_CREDENTIALS="/home/cole/.keys/artifai-graphql.json"
 
 # Default programs:
 export EDITOR="nvim"
@@ -160,3 +169,4 @@ fi
 
 # Switch escape and caps if tty and no passwd required:
 sudo -n loadkeys ${XDG_DATA_HOME:-$HOME/.local/share}/larbs/ttymaps.kmap 2>/dev/null
+

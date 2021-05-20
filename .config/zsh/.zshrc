@@ -11,6 +11,8 @@
 
 source "/home/cole/.oh-my-zsh/custom/themes/spaceship.zsh-theme"
 
+
+
 # ZSH_THEME="random"
 ZSH_THEME=""
 
@@ -165,13 +167,18 @@ echo -ne '\e[5 q' # Use beam shape cursor on startup.
 preexec() { echo -ne '\e[5 q' ;} # Use beam shape cursor for each new prompt.
 
 # The next line updates PATH for the Google Cloud SDK.
-if [ -f '/home/gautierk/google-cloud-sdk/path.zsh.inc' ]; then . '/home/gautierk/google-cloud-sdk/path.zsh.inc'; fi
+if [ -f '/home/cole/google-cloud-sdk/path.zsh.inc' ]; then . '/home/cole/google-cloud-sdk/path.zsh.inc'; fi
 
 # The next line enables shell command completion for gcloud.
-if [ -f '/home/gautierk/google-cloud-sdk/completion.zsh.inc' ]; then . '/home/gautierk/google-cloud-sdk/completion.zsh.inc'; fi
+if [ -f '/home/cole/google-cloud-sdk/completion.zsh.inc' ]; then . '/home/cole/google-cloud-sdk/completion.zsh.inc'; fi
 
 stty -ixon
 
 unset zle_bracketed_paste
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# Load NVM
+export NVM_DIR=~/.nvm
+[[ -s "$NVM_DIR/nvm.sh" ]] && source ~/.nvm/nvm.sh --no-use
+

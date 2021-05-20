@@ -18,26 +18,34 @@ Plug 'morhetz/gruvbox'
 Plug 'tpope/vim-eunuch'
 Plug 'dracula/vim', { 'as': 'dracula' }
 Plug 'liuchengxu/space-vim-dark'
+Plug 'tomasr/molokai'
 call plug#end()
+
 
 " No explanation needed
 set nocompatible
 syntax on
 set encoding=utf-8
 colorscheme gruvbox
+" colorscheme molokai
+" au BufRead hili
+" hi Normal ctermbg=NONE
+au BufRead * hi Normal ctermbg=NONE
 " colorscheme dracula
 " colorscheme space-vim-dark
 " colorscheme default
 "
 "
-highlight Normal ctermbg=16 guibg=#000000 
+" 10 guibg=#2f343f
+" ctermbg=16 
+" hi Normal guibg=
 set nofoldenable
 
 let mapleader = " "
 let maplocalleader = ","
 " let g:gruvbox_contrast_dark = 'hard'
 " let g:gruvbox_contrast_light = 'hard'
-set background=dark
+" set background=dark
 set cursorline
 
 " Time out for key mapping and sequence respectively
@@ -239,6 +247,7 @@ function! ToggleCalendar()
     let g:calendar_open = 1
   end
 endfunction
+
 :autocmd FileType vimwiki map <leader>c :call ToggleCalendar()
 
 

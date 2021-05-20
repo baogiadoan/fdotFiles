@@ -58,7 +58,7 @@ font-2 = "Twitter Color Emoji:style=Regular:size=5:anti-alias=true;0"
 
 modules-left = i3 
 modules-center = mpd 
-modules-right = updates-arch-combined pulseaudio memory cpu batteryBAT1 batteryBAT0 date 
+modules-right = updates-arch-combined pulseaudio memory cpu batteryBAT0 date 
 ; openweathermap-fullfeatured 
 ; xbacklight wlan eth filesystem temperature powermenu batteryBAT0 
 ; system-bluetooth-bluetoothctl
