@@ -57,11 +57,15 @@ This function should only modify configuration layer settings."
      (org :variables
           org-image-actual-width 400
           org-enable-github-support t
-          org-enable-org-journal-support t
           org-enable-hugo-support t
           org-enable-reveal-js-support t
           org-enable-roam-support t
-          org-want-todo-bindings t)
+          org-enable-org-journal-support t
+          org-want-todo-bindings t
+          org-journal-file-format "%Y%m%d.org"   ;; notice the .org
+          org-journal-enable-agenda-integration t
+          org-journal-dir "~/org/journal"
+          )
      (shell :variables
             shell-default-term-shell "/usr/bin/zsh"
             shell-default-height 30
@@ -835,6 +839,7 @@ before packages are loaded."
   (spacemacs/set-leader-keys "o l" 'org-store-link)
   (spacemacs/set-leader-keys "o a" 'org-agenda)
   (spacemacs/set-leader-keys "o b" 'org-switchb)
+  (spacemacs/set-leader-keys "o r" 'org-resolve-clocks)
   (spacemacs/set-leader-keys "a o C e" 'org-clock-modify-effort-estimate)
   (spacemacs/set-leader-keys "p i" 'projectile-add-known-project)
   ;; (spacemacs/set-leader-keys "a o j r" (lambda() (interactive) (org-journal-new-entry t)))
@@ -862,6 +867,13 @@ before packages are loaded."
     )
 
 
+  (defun org-journal-find-location ()
+    ;; Open today's journal, but specify a non-nil prefix argument in order to
+    ;; inhibit inserting the heading; org-capture will insert the heading.
+    (org-journal-new-entry t)
+    (unless (eq org-journal-file-type 'daily)
+      (org-narrow-to-subtree))
+    (goto-char (point-max)))
 
   (defun ruborcalor/org-pomodoro-time ()
     "Return the remaining pomodoro time"
@@ -889,6 +901,14 @@ before packages are loaded."
 
   ;; Big org customization
   (with-eval-after-load 'org
+
+    ;; Set the tag list
+    ;; (setq org-tag-alist '(
+    ;;                       ("@work" . ?w)
+    ;;                       ("@home" . ?h)
+    ;;                       ("laptop" . ?l)
+    ;;                       )
+    ;;       )
     ;; Always start clock from last stopping point
     (setq org-clock-continuously t)
     ;; Org show habits all day
@@ -896,26 +916,29 @@ before packages are loaded."
     ;; Show org clock in spaceline
     (setq spaceline-org-clock-p t)
     ;; Set the base org directory
-    (setq org-directory "~/.org")
+    (setq org-directory "~/org")
     ;; Set the base org roam directory
-    (setq org-roam-directory "~/.org/roam")
+    (setq org-roam-directory "~/org/roam")
     ;; Org use fast todo selection
     (setq org-use-fast-todo-selection t)
-    ;; Set the org journal directory
-    (setq org-journal-dir "~/.org/journal")
     ;; Set the default capture file
-    (setq org-default-notes-file "~/.org/agenda/inbox.org")
+    (setq org-default-notes-file "~/org/agenda/inbox.org")
     ;; Soft wrap lines in org files
     (setq org-startup-truncated nil)
     ;; Set the org agenda files
-    (setq org-agenda-files '("~/.org/agenda/inbox.org"
-                             "~/.org/agenda/todo.org"
-                             "~/.org/agenda/school.org"
-                             "~/.org/agenda/work.org"
-                             "~/.org/agenda/timetracking.org"
-                             "~/.org/agenda/schedule.org"
-                             "~/.org/agenda/all-posts.org"
-                             "~/.org/agenda/projects.org"))
+    (setq org-agenda-files '("~/org/agenda/inbox.org"
+                             "~/org/agenda/todo.org"
+                             "~/org/agenda/school.org"
+                             "~/org/agenda/work.org"
+                             "~/org/agenda/schedule.org"
+                             "~/org/agenda/all-posts.org"
+                             "~/org/agenda/projects.org"
+                             "~/org/journal/"
+                             "~/org/roam/20210603134056-cisco.org"))
+
+    ;; When =org-journal-file-pattern= has the default value, this would be the regex.
+    ;; (setq org-agenda-file-regexp "\\`\\\([^.].*\\.org\\\|[0-9]\\\{8\\\}\\\(\\.gpg\\\)?\\\)\\'")
+    ;; (add-to-list 'org-agenda-files org-journal-dir)
 
     ;; Highlight latex in org
     (setq org-highlight-latex-and-related '(latex))
@@ -961,32 +984,30 @@ before packages are loaded."
 
     (setq org-capture-templates
           (quote (
-                  ("t" "todo" entry (file "~/.org/agenda/inbox.org")
+                  ("t" "todo" entry (file "~/org/agenda/inbox.org")
                    "* TODO %?\n%U\n" :clock-in t :clock-resume t)
-                  ("r" "respond" entry (file "~/.org/agenda/inbox.org")
-                   "%a\n" :clock-in t :clock-resume t :immediate-finish t)
-                  ;; ("n" "note" entry (file "~/.org/agenda/inbox.org")
-                  ;;  "* %? :NOTE:\n%U\n" :clock-in t :clock-resume t)
-                  ("j" "Journal" entry (file+datetree "~/.org/journal/diary.org")
+                  ("s" "Story" entry (file+datetree "~/org/dailystory.org")
                    "* %?\n%U\n" :clock-in t :clock-resume t)
-                  ("s" "Story" entry (file+datetree "~/.org/dailystory.org")
+                  ("d" "Draft" entry (file+datetree "~/org/drafts.org")
                    "* %?\n%U\n" :clock-in t :clock-resume t)
-                  ("d" "Draft" entry (file+datetree "~/.org/drafts.org")
-                   "* %?\n%U\n" :clock-in t :clock-resume t)
-                  ("m" "Meeting" entry (file "~/.org/agenda/inbox.org")
+                  ("m" "Meeting" entry (file "~/org/agenda/inbox.org")
                    "* TODO Meeting with %? :MEETING:\n%U" :clock-in t :clock-resume t)
-                  ;; ("p" "Phone call" entry (file "~/.org/agenda/inbox.org")
+                  ;; ("p" "Phone call" entry (file "~/org/agenda/inbox.org")
                   ;;  "* PHONE %? :PHONE:\n%U" :clock-in t :clock-resume t)
-                  ("h" "Habit" entry (file "~/.org/agenda/inbox.org")
+                  ("h" "Habit" entry (file "~/org/agenda/inbox.org")
                    "* TODO %?\n%U\n%a\nSCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d/3d>>\")\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: TODO\n:END:\n")
-                  )))
+                  ("l" "Log tracking" plain (function org-journal-find-location)
+                   "* %? %^g\n" :clock-in t :clock-resume t)
+                  )
+                 )
+          )
 
 
-    (add-to-list 'org-capture-templates
-                 '("l" "Log tracking"
-                   entry
-                   (file+datetree "~/.org/agenda/timetracking.org")
-                   "* %? %^g\n" :clock-in t :clock-resume t))
+    ;; (add-to-list 'org-capture-templates
+    ;;              '("l" "Log tracking"
+    ;;                entry
+    ;;                (file+datetree "~/org/agenda/timetracking.org")
+    ;;                "* %? %^g\n" :clock-in t :clock-resume t))
 
     (add-to-list 'org-capture-templates
                  '("p"                ;`org-capture' binding + h
@@ -999,12 +1020,12 @@ before packages are loaded."
                    (function org-hugo-new-subtree-post-capture-template)))
 
     ;; Set org refile targets
-    (setq org-refile-targets '(("~/.org/agenda/todo.org" :maxlevel . 3)
-                               ("~/.org/agenda/projects.org" :maxlevel . 3)
-                               ("~/.org/agenda/work.org" :maxlevel . 3)
-                               ("~/.org/agenda/school.org" :maxlevel . 3)
-                               ("~/.org/agenda/org-roam.org" :maxlevel . 3)
-                               ("~/.org/agenda/someday.org" :maxlevel . 3)))
+    (setq org-refile-targets '(("~/org/agenda/todo.org" :maxlevel . 3)
+                               ("~/org/agenda/projects.org" :maxlevel . 3)
+                               ("~/org/agenda/work.org" :maxlevel . 3)
+                               ("~/org/agenda/school.org" :maxlevel . 3)
+                               ("~/org/agenda/org-roam.org" :maxlevel . 3)
+                               ("~/org/agenda/someday.org" :maxlevel . 3)))
      ; Allow refile to create parent tasks with confirmation
     (setq org-refile-allow-creating-parent-nodes (quote confirm))
 
@@ -1185,7 +1206,7 @@ before packages are loaded."
   ;;                entry
   ;;                (file+headline org-my-anki-file "Dispatch Shelf")
   ;;                "* %<%H:%M>   %^g\n:PROPERTIES:\n:ANKI_NOTE_TYPE: Cloze\n:ANKI_DECK: Mega\n:END:\n** Text\n%x\n** Extra\n"))
-  ;; (setq org-my-anki-file "~/.org/anki.org")
+  ;; (setq org-my-anki-file "~/org/anki.org")
 
 
 
@@ -1289,6 +1310,8 @@ This function is called at the very end of Spacemacs initialization."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(evil-want-Y-yank-to-eol nil)
+ '(org-agenda-files
+   '("~/org/agenda/inbox.org" "~/org/agenda/todo.org" "~/org/agenda/school.org" "~/org/agenda/work.org" "~/org/agenda/all-posts.org" "~/org/agenda/projects.org" "/home/cole/org/journal/20200402.org" "/home/cole/org/journal/20200403.org" "/home/cole/org/journal/20200404.org" "/home/cole/org/journal/20200405.org" "/home/cole/org/journal/20200406.org" "/home/cole/org/journal/20200407.org" "/home/cole/org/journal/20200409.org" "/home/cole/org/journal/20201028.org" "/home/cole/org/journal/20210503.org" "/home/cole/org/journal/20210504.org" "/home/cole/org/journal/20210505.org" "/home/cole/org/journal/20210506.org" "/home/cole/org/journal/20210508.org" "/home/cole/org/journal/20210509.org" "/home/cole/org/journal/20210510.org" "/home/cole/org/journal/20210511.org" "/home/cole/org/journal/20210513.org" "/home/cole/org/journal/20210514.org" "/home/cole/org/journal/20210515.org" "/home/cole/org/journal/20210516.org" "/home/cole/org/journal/20210517.org" "/home/cole/org/journal/20210519.org" "/home/cole/org/journal/20210520.org" "/home/cole/org/journal/20210521.org" "/home/cole/org/journal/20210523.org" "/home/cole/org/journal/20210524.org" "/home/cole/org/journal/20210525.org" "/home/cole/org/journal/20210526.org" "/home/cole/org/journal/20210528.org" "/home/cole/org/journal/20210529.org" "/home/cole/org/journal/20210531.org" "/home/cole/org/journal/20210601.org" "/home/cole/org/journal/20210602.org" "/home/cole/org/journal/20210603.org" "/home/cole/org/journal/20210604.org" "/home/cole/org/journal/20210605.org" "/home/cole/org/journal/20210607.org" "/home/cole/org/journal/20210608.org" "/home/cole/org/journal/20210609.org" "/home/cole/org/journal/20210610.org" "/home/cole/org/journal/20210611.org" "/home/cole/org/journal/20210612.org" "~/org/roam/20210603134056-cisco.org" "/home/cole/Dropbox/org/journal/20210624.org"))
  '(package-selected-packages
    '(pandoc-mode ox-pandoc dockerfile-mode docker docker-tramp company-terraform terraform-mode hcl-mode yaml-mode sqlup-mode sql-indent org-clock-csv yasnippet-snippets yasnippet-classic-snippets yapfify xterm-color ws-butler writeroom-mode winum which-key web-mode web-beautify vterm volatile-highlights vimrc-mode vi-tilde-fringe uuidgen use-package unicode-fonts unfill undo-tree treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil toc-org tide terminal-here tagedit symon symbol-overlay string-inflection sphinx-doc spaceline-all-the-icons smeargle slim-mode shell-pop scss-mode sass-mode rjsx-mode restart-emacs react-snippets rainbow-delimiters pytest pyenv-mode py-isort pug-mode prettier-js popwin poetry pippel pipenv pip-requirements pdf-tools pcre2el password-generator paradox ox-hugo ox-gfm overseer orgit org-superstar org-super-agenda org-roam org-rich-yank org-re-reveal org-projectile org-present org-pomodoro org-noter org-mime org-journal org-download org-cliplink org-brain open-junk-file nodejs-repl nameless mwim multi-term move-text mmm-mode markdown-toc magit-svn magit-section magit-gitflow macrostep lsp-ui lsp-python-ms lsp-pyright lsp-origami lsp-latex lorem-ipsum livid-mode live-py-mode link-hint json-navigator json-mode js2-refactor js-doc indent-guide importmagic impatient-mode hybrid-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-pydoc helm-purpose helm-projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-lsp helm-ls-git helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ gh-md fuzzy format-all forge font-lock+ flyspell-correct-helm flycheck-pos-tip flycheck-package flycheck-elsa flx-ido fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-easymotion evil-cleverparens evil-args evil-anzu eval-sexp-fu eshell-z eshell-prompt-extras esh-help emr emmet-mode elisp-slime-nav editorconfig dumb-jump dotenv-mode dired-quick-sort diminish devdocs define-word dap-mode dactyl-mode cython-mode csv-mode company-web company-statistics company-reftex company-auctex company-anaconda column-enforce-mode clean-aindent-mode centered-cursor-mode browse-at-remote blacken auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile aggressive-indent ace-link ace-jump-helm-line ac-ispell))
  '(web-mode-markup-indent-offset 2))
