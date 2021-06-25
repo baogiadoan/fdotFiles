@@ -33,22 +33,21 @@ This function should only modify configuration layer settings."
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
    '(
-     (yaml :variables yaml-enable-lsp t)
-     sql
-     ;; pandoc
-     imenu-list
-     (docker :variables docker-dockerfile-backend 'lsp)
-     (terraform :variables terraform-auto-format-on-save t terraform-backend 'lsp)
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
      ;; `M-m f e R' (Emacs style) to install them.
      ;; ----------------------------------------------------------------
-     (auto-completion :variables auto-completion-enable-snippets-in-popup t auto-completion-enable-sort-by-usage t)
+     (auto-completion :variables
+                      auto-completion-enable-snippets-in-popup t
+                      auto-completion-enable-sort-by-usage t
+                      auto-completion-complete-with-key-sequence "jk"
+                      )
      better-defaults
      emacs-lisp
      git
      helm
+     (yaml :variables yaml-enable-lsp t)
      (lsp :variables
           lsp-headerline-breadcrumb-enable nil
      )
@@ -66,51 +65,16 @@ This function should only modify configuration layer settings."
           org-journal-enable-agenda-integration t
           org-journal-dir "~/org/journal"
           )
-     (shell :variables
-            shell-default-term-shell "/usr/bin/zsh"
-            shell-default-height 30
-            shell-default-position 'bottom)
-     (spell-checking :variables spell-checking-enable-by-default nil)
+     (spell-checking :variables spell-checking-enable-by-default t)
      syntax-checking
      version-control
-     ;; treemacs
      (treemacs :variables treemacs-use-scope-type 'Perspectives)
-     ;; (treemacs :variables treemacs-use-all-the-icons-theme t)
-     ;; Layers I added in
      (latex :variables
             latex-build-command "LaTeX"
             latex-enable-magic nil
             latex-enable-auto-fill nil)
      csv
      pdf
-     (typescript :variables
-                 node-add-modules-path t
-                 typescript-backend 'tide
-                 typescript-fmt-tool 'prettier
-                 typescript-fmt-on-save t
-                 typescript-linter 'eslint)
-
-     vimscript
-     tide
-     ;; rjsx-mode
-     ;; yasnippet-snippets
-     ;; prettier-js
-     (javascript :variables
-                 javascript-backend 'tide
-                 javascript-fmt-tool 'prettier
-                 node-add-modules-path t
-                 js2-basic-offset 2
-                 js-indent-level 2)
-     react
-     html
-     (python :variables
-             python-backend 'lsp
-             python-lsp-server 'pyright
-             ;; python-tab-width 4
-             python-formatter 'black
-             python-format-on-save t
-             python-sort-imports-on-save t
-             python-pipenv-activate t)
      )
 
    ;; List of additional packages that will be installed without being wrapped
@@ -122,17 +86,9 @@ This function should only modify configuration layer settings."
    ;; `:location' property: '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
    dotspacemacs-additional-packages '(
-                                      prettier-js
-                                      yasnippet-classic-snippets
-                                      format-all
                                       org-super-agenda
                                       org-noter
-                                      react-snippets
-                                      s
                                       org-clock-csv
-                                      nvm
-                                      rjsx-mode
-                                      yasnippet-snippets
                                       )
 
    ;; A list of packages that cannot be updated.
@@ -595,108 +551,48 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
-  (nvm-use "v14.15.4")
+  ;; General --------------------------------------------------------------------
 
-  ;; (setq exec-path (append exec-path '("~/.nvm/versions/node/v14.15.4/bin")))
-
-  ;; yasnippet
-  (yas-global-mode 1)
-
-  ;; flycheck
-  (global-flycheck-mode)
-  (add-hook 'after-init-hook #'global-flycheck-mode)
-
-  ;; company-mode 
-  (global-company-mode)
-
-  (with-eval-after-load 'lsp-mode
-
-    (push "[/\\\\][^/\\\\]*\\.next$" lsp-file-watch-ignored-directories)
-    (push "[/\\\\][^/\\\\]*\\build$" lsp-file-watch-ignored-directories)
-    )
-
-
- (defun tide-setup-hook ()
-    (tide-setup)
-    (eldoc-mode)
-    (tide-hl-identifier-mode +1)
-    (setq web-mode-enable-auto-quoting nil)
-    (setq web-mode-markup-indent-offset 2)
-    (setq web-mode-code-indent-offset 2)
-    (setq web-mode-attr-indent-offset 2)
-    (setq web-mode-attr-value-indent-offset 2)
-    (setq lsp-eslint-server-command '("node" (concat (getenv "HOME") "/var/src/vscode-eslint/server/out/eslintServer.js") "--stdio"))
-    (set (make-local-variable 'company-backends)
-         '((company-tide company-files :with company-yasnippet)
-           (company-dabbrev-code company-dabbrev))))
-
-    ;; hooks
-    ;; (add-hook 'before-save-hook 'prettier nil)
-
-
-    ;; use rjsx-mode for .js* files except json and use tide with rjsx
-    (add-to-list 'auto-mode-alist '("\\.js.*$" . rjsx-mode))
-    (add-to-list 'auto-mode-alist '("\\.json$" . json-mode))
-    (add-hook 'rjsx-mode-hook 'tide-setup-hook)
-
-
-    ;; web-mode extra config
-    (add-hook 'web-mode-hook 'tide-setup-hook
-              (lambda () (pcase (file-name-extension buffer-file-name)
-                      ("tsx" ('tide-setup-hook))
-                      (_ (my-web-mode-hook)))))
-
-    (with-eval-after-load "flycheck"
-      (flycheck-add-mode 'typescript-tslint 'web-mode)
-      (add-hook 'web-mode-hook 'company-mode)
-      (add-hook 'web-mode-hook 'prettier-js-mode)
-      (add-hook 'web-mode-hook #'turn-on-smartparens-mode t)
-      )
-
-
-
-  ;; (with-eval-after-load "flycheck"
-  ;;   (flycheck-add-mode 'typescript-tslint 'web-mode)
-  ;;   (add-hook 'web-mode-hook 'company-mode)
-  ;;   (add-hook 'web-mode-hook 'prettier-js-mode)
-  ;;   (add-hook 'web-mode-hook #'turn-on-smartparens-mode t)
-
-  ;;   )
-
-
-
-  ;; Get emojis working
+  ;; Get emojis working ⭐
   (set-fontset-font t 'unicode "Noto Color Emoji" nil 'prepend)
-
-
-  ;; ⭐
 
   ;; 100 transparency
   (set-frame-parameter (selected-frame) 'alpha '(100))
-
   (add-to-list 'default-frame-alist '(alpha . (100)))
 
-  ;; prevent selecting with visual mode
+  ;; prevent copying text when highlighting it
   (fset 'evil-visual-update-x-selection 'ignore)
 
-  ;; typescript and javascript indent level
-  (setq typescript-indent-level 2)
-  (setq javascript-indent-level 2)
-  ;; (setq js-indent-level 2
-  ;;       js-indent-align-list-continuation nil)
+
+  ;; enable word wrapping
+  (setq-default word-wrap t)
+
+  ;; Helpful org keybindings
+  (spacemacs/set-leader-keys "o l" 'org-store-link)
+  (spacemacs/set-leader-keys "o a" 'org-agenda)
+  (spacemacs/set-leader-keys "o b" 'org-switchb)
+  (spacemacs/set-leader-keys "o r" 'org-resolve-clocks)
+  (spacemacs/set-leader-keys "a o C e" 'org-clock-modify-effort-estimate)
+  (spacemacs/set-leader-keys "p i" 'projectile-add-known-project)
+  ;; (spacemacs/set-leader-keys "a o j r" (lambda() (interactive) (org-journal-new-entry t)))
 
 
-  ;; (setq web-mode-code-indent-offset 2)
-  ;; (setq web-mode-indent-style 2)
-  ;; (setq-default js2-basic-offset 2)
+  ;; auto update if buffer changed elsewhere on disk
+  (global-auto-revert-mode t)
 
-  ;; https://develop.spacemacs.org/layers/+completion/auto-completion/README.html for nicer looking faces auto-completion
+
+
+  ;; Auto complete --------------------------------------------------------------
+
+  ;; For nicer-looking faces, try adding the following to `custom-set-faces` in your dotspacemacs file.
   (custom-set-faces
    '(company-tooltip-common
      ((t (:inherit company-tooltip :weight bold :underline nil))))
    '(company-tooltip-common-selection
      ((t (:inherit company-tooltip-selection :weight bold :underline nil)))))
 
+
+  ;; org archiving ------------------------------------------------------------------
 
   (provide 'org-archive-subtree-hierarchical)
   (require 'org-archive)
@@ -795,10 +691,9 @@ before packages are loaded."
   (setq org-archive-default-command #'org-archive-subtree-hierarchical)
 
 
-  ;; enable word wrapping
-  (setq-default word-wrap t)
 
-  ;; latex customization
+
+  ;; latex customization ----------------------------------------------------------------
   (setq-default TeX-engine 'luatex)
   (setq org-latex-listings 'minted
         org-latex-packages-alist '(("" "minted"))
@@ -824,8 +719,7 @@ before packages are loaded."
   (setq TeX-view-program-selection '((output-pdf "Zathura")))
 
 
-  ;; auto update if buffer changed elsewhere on disk
-  (global-auto-revert-mode t)
+  ;; snippets ------------------------------------------------------------
 
   ;; auto expand yas snippet if it has auto
   (defun my-yas-try-expanding-auto-snippets ()
@@ -835,17 +729,7 @@ before packages are loaded."
   (add-hook 'post-command-hook #'my-yas-try-expanding-auto-snippets)
 
 
-  ;; Helpful org keybindings
-  (spacemacs/set-leader-keys "o l" 'org-store-link)
-  (spacemacs/set-leader-keys "o a" 'org-agenda)
-  (spacemacs/set-leader-keys "o b" 'org-switchb)
-  (spacemacs/set-leader-keys "o r" 'org-resolve-clocks)
-  (spacemacs/set-leader-keys "a o C e" 'org-clock-modify-effort-estimate)
-  (spacemacs/set-leader-keys "p i" 'projectile-add-known-project)
-  ;; (spacemacs/set-leader-keys "a o j r" (lambda() (interactive) (org-journal-new-entry t)))
-
-
-  ;; Escape pairs wiht C-l in insert mode
+  ;; Escape pairs with C-l in insert mode
   (define-key evil-insert-state-map (kbd "C-l") 'sp-up-sexp)
 
   ;; Org pomodoro config
@@ -867,14 +751,6 @@ before packages are loaded."
     )
 
 
-  (defun org-journal-find-location ()
-    ;; Open today's journal, but specify a non-nil prefix argument in order to
-    ;; inhibit inserting the heading; org-capture will insert the heading.
-    (org-journal-new-entry t)
-    (unless (eq org-journal-file-type 'daily)
-      (org-narrow-to-subtree))
-    (goto-char (point-max)))
-
   (defun ruborcalor/org-pomodoro-time ()
     "Return the remaining pomodoro time"
     (if (org-pomodoro-active-p)
@@ -890,10 +766,6 @@ before packages are loaded."
       "No active pomo"))
 
 
-
-  ;; Set path to reveal.js
-  (setq org-re-reveal-root "file:///home/gautierk/.npm/lib/node_modules/reveal.js/")
-
   ;; Navigate visual lines in evil mode. Not sure if all of the below is necessary
   (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
   (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line)
@@ -902,13 +774,6 @@ before packages are loaded."
   ;; Big org customization
   (with-eval-after-load 'org
 
-    ;; Set the tag list
-    ;; (setq org-tag-alist '(
-    ;;                       ("@work" . ?w)
-    ;;                       ("@home" . ?h)
-    ;;                       ("laptop" . ?l)
-    ;;                       )
-    ;;       )
     ;; Always start clock from last stopping point
     (setq org-clock-continuously t)
     ;; Org show habits all day
@@ -935,18 +800,10 @@ before packages are loaded."
                              "~/org/agenda/projects.org"
                              "~/org/journal/"
                              "~/org/roam/20210603134056-cisco.org"))
-
-    ;; When =org-journal-file-pattern= has the default value, this would be the regex.
-    ;; (setq org-agenda-file-regexp "\\`\\\([^.].*\\.org\\\|[0-9]\\\{8\\\}\\\(\\.gpg\\\)?\\\)\\'")
-    ;; (add-to-list 'org-agenda-files org-journal-dir)
-
+    ;; Set path to reveal.js
+    (setq org-re-reveal-root "file:///home/gautierk/.npm/lib/node_modules/reveal.js/")
     ;; Highlight latex in org
     (setq org-highlight-latex-and-related '(latex))
-
-    ;; Show lot of clocking history so it's easy to pick items off the C-F11 list
-    ;; org-clock history lets you see the list of recently clocked tasks, and clock into one
-    (setq org-clock-history-length 15)
-
     ;; Save clock data and state changes and notes in the LOGBOOK drawer
     (setq org-clock-into-drawer t)
     ;; Sometimes I change tasks I'm clocking quickly - this removes clocked tasks with 0:00 duration
@@ -957,6 +814,8 @@ before packages are loaded."
     (setq org-clock-persist t)
     ;; Include current clocking task in clock reports
     (setq org-clock-report-include-clocking-task t)
+    ;; Hides leading stars, etc
+    (setq org-startup-indented t)
 
 
     (setq org-todo-keywords
@@ -972,7 +831,6 @@ before packages are loaded."
                   ("CANCELLED" :foreground "forest green" :weight bold)
                   ("PHONE" :foreground "forest green" :weight bold))))
 
-    (setq org-startup-indented t)
     (setq org-todo-state-tags-triggers
           (quote (("CANCELLED" ("CANCELLED" . t))
                   ("WAITING" ("WAITING" . t))
@@ -992,10 +850,6 @@ before packages are loaded."
                    "* %?\n%U\n" :clock-in t :clock-resume t)
                   ("m" "Meeting" entry (file "~/org/agenda/inbox.org")
                    "* TODO Meeting with %? :MEETING:\n%U" :clock-in t :clock-resume t)
-                  ;; ("p" "Phone call" entry (file "~/org/agenda/inbox.org")
-                  ;;  "* PHONE %? :PHONE:\n%U" :clock-in t :clock-resume t)
-                  ("h" "Habit" entry (file "~/org/agenda/inbox.org")
-                   "* TODO %?\n%U\n%a\nSCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d/3d>>\")\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: TODO\n:END:\n")
                   ("l" "Log tracking" plain (function org-journal-find-location)
                    "* %? %^g\n" :clock-in t :clock-resume t)
                   )
@@ -1026,13 +880,14 @@ before packages are loaded."
                                ("~/org/agenda/school.org" :maxlevel . 3)
                                ("~/org/agenda/org-roam.org" :maxlevel . 3)
                                ("~/org/agenda/someday.org" :maxlevel . 3)))
-     ; Allow refile to create parent tasks with confirmation
+
+    ;; Allow refile to create parent tasks with confirmation
     (setq org-refile-allow-creating-parent-nodes (quote confirm))
 
-    ; Use full outline paths for refile targets - we file directly with IDO
+    ;; Use full outline paths for refile targets - we file directly with IDO
     (setq org-refile-use-outline-path 'file)
 
-    ; Targets complete directly with IDO
+    ;; Targets complete directly with IDO
     (setq org-outline-path-complete-in-steps nil)
 
     ;; Verify that refile targets aren't done
@@ -1040,13 +895,6 @@ before packages are loaded."
       "Exclude todo keywords with a done state from refile targets"
       (not (member (nth 2 (org-heading-components)) org-done-keywords)))
     (setq org-refile-target-verify-function 'bh/verify-refile-target)
-
-
-
-
-
-    ;; Set super agenda mode to true
-    ;; (setq org-super-agenda-mode t)
 
     ;; Capture function for new blog post
     (defun org-hugo-new-subtree-post-capture-template ()
@@ -1064,9 +912,6 @@ before packages are loaded."
                      "%?\n")                ;Place the cursor here finally
                    "\n")))
 
-
-    ;; Add org-habit to org-modules
-    (add-to-list 'org-modules 'org-habit)
 
     ;; Set the org-agenda commands
     (setq org-agenda-custom-commands
@@ -1114,12 +959,12 @@ before packages are loaded."
                                            :order 9)
                            ))))))
             ))
+
     ;; Activate org-super-agenda-mode
     (org-super-agenda-mode)
+
     ;; Resume clocking task when emacs is restarted
     (org-clock-persistence-insinuate)
-
-
     )
 
 
@@ -1127,172 +972,16 @@ before packages are loaded."
   (setq scroll-margin 5
         scroll-preserve-screen-position t)
 
-  ;; Open Urxvt terminal from emacs
-  (setq terminal-here-terminal-command (list "urxt"))
-
   ;; Don't automatically break lines when they get long
   (spacemacs/toggle-auto-fill-mode-off)
 
-  ;; Javascript customization
-  ;; (setq js-indent-level 2)
-  ;; (setq prettier-js-args '(
-  ;;                          "--tab-width" "2"
-  ;;                          ))
-  ;; (setq prettier-html-args '(
-  ;;                            "--tab-width" "2"
-  ;;                            ))
-
-  ;; Delete backwards word? It already seems to work
+  ;; Delete backward word with C-w in company and helm
   (with-eval-after-load 'company
     (define-key company-active-map (kbd "C-w") 'evil-delete-backward-word)
     )
   (with-eval-after-load 'helm
     (define-key helm-map (kbd "C-w") 'evil-delete-backward-word)
     )
-
-
-  ;; Don't lock files when emacs is using them
-  ;; Necessary for npm to not crash when editing files in project
-  (setq create-lockfiles nil)
-
-  ;; Commented
-
-  ;; Support for anki-editor
-  ;; (use-package anki-editor
-  ;;   :after org
-  ;;   :bind (:map org-mode-map
-  ;;               ("<f12>" . anki-editor-cloze-region-auto-incr)
-  ;;               ("<f11>" . anki-editor-cloze-region-dont-incr)
-  ;;               ("<f10>" . anki-editor-reset-cloze-number)
-  ;;               ("<f9>"  . anki-editor-push-tree))
-  ;;   :hook (org-capture-after-finalize . anki-editor-reset-cloze-number) ; Reset cloze-number after each capture.
-  ;;   :config
-  ;;   (setq anki-editor-create-decks t ;; Allow anki-editor to create a new deck if it doesn't exist
-  ;;         anki-editor-org-tags-as-anki-tags t)
-
-  ;;   (defun anki-editor-cloze-region-auto-incr (&optional arg)
-  ;;     "Cloze region without hint and increase card number."
-  ;;     (interactive)
-  ;;     (anki-editor-cloze-region my-anki-editor-cloze-number "")
-  ;;     (setq my-anki-editor-cloze-number (1+ my-anki-editor-cloze-number))
-  ;;     (forward-sexp))
-  ;;   (defun anki-editor-cloze-region-dont-incr (&optional arg)
-  ;;     "Cloze region without hint using the previous card number."
-  ;;     (interactive)
-  ;;     (anki-editor-cloze-region (1- my-anki-editor-cloze-number) "")
-  ;;     (forward-sexp))
-  ;;   (defun anki-editor-reset-cloze-number (&optional arg)
-  ;;     "Reset cloze number to ARG or 1"
-  ;;     (interactive)
-  ;;     (setq my-anki-editor-cloze-number (or arg 1)))
-  ;;   (defun anki-editor-push-tree ()
-  ;;     "Push all notes under a tree."
-  ;;     (interactive)
-  ;;     (anki-editor-push-notes '(4))
-  ;;     (anki-editor-reset-cloze-number))
-  ;;   ;; Initialize
-  ;;   (anki-editor-reset-cloze-number)
-  ;;   )
-
-  ;; Org-capture templates
-  ;; (add-to-list 'org-capture-templates
-  ;;              '("a" "Anki basic"
-  ;;                entry
-  ;;                (file+headline org-my-anki-file "Dispatch Shelf")
-  ;;                "* %<%H:%M>   %^g\n:PROPERTIES:\n:ANKI_NOTE_TYPE: Basic\n:ANKI_DECK: Mega\n:END:\n** Front\n%?\n** Back\n%x\n"))
-
-  ;; (add-to-list 'org-capture-templates
-  ;;              '("A" "Anki cloze"
-  ;;                entry
-  ;;                (file+headline org-my-anki-file "Dispatch Shelf")
-  ;;                "* %<%H:%M>   %^g\n:PROPERTIES:\n:ANKI_NOTE_TYPE: Cloze\n:ANKI_DECK: Mega\n:END:\n** Text\n%x\n** Extra\n"))
-  ;; (setq org-my-anki-file "~/org/anki.org")
-
-
-
-
-  ;; Not sure if I need this setting for projectile
-  ;; (setq projectile-require-project-root t)
-
-  ;; Something to do with neotree
-  ;; (setq neo-vc-integration '(char))
-
-  ;; Something to do with tramp?
-  ;; (setq tramp-histfile-override "/dev/null")
-
-  ;; Not sure what this is
-  ;; (defun my-web-mode-hook ()
-  ;;   "Hooks for Web mode."
-  ;;   (setq web-mode-markup-indent-offset 2)
-  ;;   )
-  ;; (add-hook 'web-mode-hook  'my-web-mode-hook)
-
-  ;; helps with word wrap?
-  ;; (add-hook 'visual-line-mode-hook #'visual-fill-column-mode)
-
-  ;; configures autocomplete?
-  ;; (setq ac-dwim t)
-  ;; (ac-config-default)
-  ;; (setq ac-sources '(ac-source-yasnippet
-  ;;                    ac-source-abbrev
-  ;;                    ac-source-words-in-same-mode-buffers))
-  ;; (ac-set-trigger-key "TAB")
-
-
-
-  ;; is this necessary to use magit?
-  ;; (use-package magit-popup
-  ;;   :ensure t ; make sure it is installed
-  ;;   :demand t ; make sure it is loaded
-  ;; )
-
-
-  ;; Enables some org keybindings in evil org
-  ;; (use-package evil-org
-  ;;   :ensure t
-  ;;   :after org
-  ;;   :config
-  ;;   (add-hook 'org-mode-hook 'evil-org-mode)
-  ;;   (add-hook 'evil-org-mode-hook
-  ;;             (lambda ()
-  ;;               (evil-org-set-key-theme '(textobjects insert navigation additional shift todo heading))
-  ;;               )))
-
-
-  ;; ;; Allow Emacs to access content from clipboard.
-  ;; (setq x-select-enable-clipboard t
-  ;;       x-select-enable-primary t)
-
-
-
-
-  ;; Hugo Stuff
-  ;; More here https://blog.tohojo.dk/2015/10/integrating-hugo-into-emacs.html
-  ;; (setq hugo-base-dir "~/Projects/cole-website/"
-  ;;       hugo-buffer "*hugo*")
-  ;; (defun hugo-server (&optional arg)
-  ;;   (interactive "P")
-  ;;   (let* ((default-directory (concat (expand-file-name hugo-base-dir) "/"))
-  ;;          (proc (get-buffer-process hugo-buffer)))
-  ;;     (if (and proc (process-live-p proc))
-  ;;         (progn (interrupt-process proc)
-  ;;                (message "Stopped Hugo server"))
-  ;;       (start-process "hugo" hugo-buffer "hugo" "server" "--buildDrafts" "--watch" "-d" "dev" "--disableFastRender")
-  ;;       (message "Started Hugo server")
-  ;;       (unless arg
-  ;;         (browse-url "http://localhost:1313/")))))
-
-
-
-  ;; iso timestamp?
-  ;; (defun iso-timestamp ()
-  ;;   (concat (format-time-string "%Y-%m-%dT%T")
-  ;;           ((lambda (x) (concat (substring x 0 3) ":" (substring x 3 5)))
-  ;;            (format-time-string "%z"))))
-
-
-
-
   )
 
 
